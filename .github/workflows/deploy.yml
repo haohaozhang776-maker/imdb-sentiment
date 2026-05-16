@@ -25,7 +25,8 @@ jobs:
         run: python train.py
 
       - name: Deploy to Hugging Face Space
-        uses: gradio/app@main
+        uses: huggingface/actions/push-to-hub@main
         with:
-          space_id: ${{ secrets.HF_SPACE_ID }}
+          repo_id: ${{ secrets.HF_SPACE_ID }}
           hf_token: ${{ secrets.HF_TOKEN }}
+          commit_message: "Deploy from GitHub Actions"
