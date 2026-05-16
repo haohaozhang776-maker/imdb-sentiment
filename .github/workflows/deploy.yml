@@ -1,8 +1,8 @@
-name: build-and-deploy
+name: Deploy to Hugging Face
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
@@ -22,23 +22,21 @@ jobs:
           pip install -r requirements.txt
 
       - name: Train model
-        run: |
-          python train.py
+        run: python train.py
 
-      - name: Push to Hugging Face Space
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_USERNAME: ${{ secrets.HF_USERNAME }}
-          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
+      - name: Deploy to Space
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          # 克隆 Hugging Face Space 仓库
-          git clone https://huggingface.co/spaces/${HF_USERNAME}/${HF_SPACE_NAME} space
-          # 复制必要文件（排除space目录本身）
-          cp -r app.py model.pkl tfidf.pkl requirements.txt space/
-          # 进入space目录并推送
-          cd space
+
+          # 克隆你的 Hugging Face Space
+          git clone https://${{ secrets.HF_TOKEN }}@huggingface.co/spaces/${{ secrets.HF_SPACE_ID }} temp_space
+
+          # 只复制需要的文件，不会循环复制！
+          cp app.py model.pkl tfidf.pkl requirements.txt temp_space/
+
+          # 提交并推送
+          cd temp_space
           git add .
-          git commit -m "Deploy from GitHub Actions" || echo "No changes to commit"
-          git push https://${HF_TOKEN}@huggingface.co/spaces/${HF_USERNAME}/${HF_SPACE_NAME} main
+          git commit -m "Update from GitHub" || true
+          git push
