@@ -5,20 +5,27 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
+
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Train model
         run: python train.py
-      - name: Deploy to HF
-        uses: huggingface/huggingface-space-deployer@main
+
+      - name: Deploy to Hugging Face Space
+        uses: gradio/app@main
         with:
-          api-token: ${{ secrets.HF_TOKEN }}
-          space-id: zhanghaohao0420/imdb-sentiment
+          space_id: ${{ secrets.HF_SPACE_ID }}
+          hf_token: ${{ secrets.HF_TOKEN }}
