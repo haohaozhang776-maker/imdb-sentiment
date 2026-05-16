@@ -29,19 +29,28 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
+          # 使用 huggingface_hub 上传文件，彻底避免 git push 问题
+          python - <<END
+          from huggingface_hub import upload_file
+          import os
 
-          # 1. 克隆 Hugging Face Space
-          git clone https://huggingface.co/spaces/${HF_SPACE_ID} temp_space
+          files_to_upload = [
+              "app.py",
+              "model.pkl",
+              "tfidf.pkl",
+              "requirements.txt"
+          ]
 
-          # 2. 复制必要文件
-          cp app.py model.pkl tfidf.pkl requirements.txt temp_space/
-
-          # 3. 进入目录并提交
-          cd temp_space
-          git add .
-          git commit -m "Update from GitHub" || true
-
-          # 4. 关键修改：直接在 push URL 里带上 token
-          git push https://${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID} main
+          for file in files_to_upload:
+              if os.path.exists(file):
+                  upload_file(
+                      path_or_fileobj=file,
+                      path_in_repo=file,
+                      repo_id=os.environ["HF_SPACE_ID"],
+                      repo_type="space",
+                      token=os.environ["HF_TOKEN"]
+                  )
+                  print(f"Uploaded {file} successfully")
+              else:
+                  print(f"Warning: {file} not found, skipping")
+          END
