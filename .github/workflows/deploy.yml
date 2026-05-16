@@ -32,15 +32,16 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-          # 克隆 Hugging Face Space 仓库
+          # 1. 克隆 Hugging Face Space
           git clone https://huggingface.co/spaces/${HF_SPACE_ID} temp_space
 
-          # 复制必要文件
+          # 2. 复制必要文件
           cp app.py model.pkl tfidf.pkl requirements.txt temp_space/
 
-          # 进入目录并推送
+          # 3. 进入目录并提交
           cd temp_space
           git add .
           git commit -m "Update from GitHub" || true
-          # 用 token 拼接认证地址推送
+
+          # 4. 关键修改：直接在 push URL 里带上 token
           git push https://${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID} main
